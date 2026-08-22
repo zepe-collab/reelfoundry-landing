@@ -23,47 +23,26 @@ import {
   WindowsLogo,
   X,
 } from "@phosphor-icons/react";
+import { defaultSiteContent, mergeSiteContent } from "./siteContent";
 
-const directions = [
-  {
-    title: "治愈日常",
-    copy: "把旅行里的安静片刻，剪成一段温柔的日记。",
-    image: "/assets/reelfoundry/final-video.png",
-  },
-  {
-    title: "公路记忆",
-    copy: "跟着路途向前，让沿途风景成为故事的节奏。",
-    image: "/assets/reelfoundry/hero-travel.png",
-  },
-  {
-    title: "城市漫游",
-    copy: "把街巷、灯光和偶遇，写成一封给城市的信。",
-    image: "/assets/reelfoundry/final-video.png",
-  },
-];
+function useSiteContent() {
+  const [content, setContent] = useState(defaultSiteContent);
 
-const questions = [
-  {
-    question: "需要付费才能使用 ReelFoundry 吗？",
-    answer:
-      "不需要。ReelFoundry 启动器免费下载，Windows 与 macOS 均可使用。",
-  },
-  {
-    question: "模型调用如何计费？",
-    answer:
-      "当你调用 AI 模型时，由所选模型服务商按照其公布的 API 计费规则结算。费用会因模型、画面数量和视频时长而不同。",
-  },
-  {
-    question: "我的素材会保存在哪里？",
-    answer:
-      "项目与素材由本地启动器管理。调用模型时，完成任务所需的内容会发送给你选择的模型服务商，请同时阅读相应服务商的隐私说明。",
-  },
-  {
-    question: "可以使用不同的模型吗？",
-    answer:
-      "可以。ReelFoundry 计划支持多种主流模型，让你根据效果、速度和成本自由选择。",
-  },
-];
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/content", { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((value) => {
+        if (value) setContent(mergeSiteContent(value));
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") console.warn("站点内容读取失败，已使用默认内容。", error);
+      });
+    return () => controller.abort();
+  }, []);
+
+  return content;
+}
 
 function usePlatform() {
   return useMemo(() => {
@@ -88,6 +67,9 @@ function DownloadButton({ platform, primary = false, onDownload }) {
 }
 
 export function App() {
+  const content = useSiteContent();
+  const directions = content.directions;
+  const questions = content.faq;
   const detectedPlatform = usePlatform();
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState(detectedPlatform);
@@ -120,8 +102,8 @@ export function App() {
   return (
     <div className="site-shell">
       <header className="topbar">
-        <a className="wordmark" href="#top" aria-label="ReelFoundry 首页">
-          ReelFoundry
+        <a className="wordmark" href="#top" aria-label={`${content.brand} 首页`}>
+          {content.brand}
         </a>
 
         <nav className={menuOpen ? "nav nav-open" : "nav"} aria-label="主导航">
@@ -144,7 +126,7 @@ export function App() {
           type="button"
           onClick={() => handleDownload(detectedPlatform)}
         >
-          免费下载
+          {content.hero.primaryCta}
         </button>
 
         <button
@@ -161,10 +143,10 @@ export function App() {
       <main>
         <section className="hero" id="top">
           <div className="hero-copy" data-reveal>
-            <p className="eyebrow">本地运行的 AI 视频创意搭档</p>
-            <h1>把你的照片和想法，变成一段值得分享的视频。</h1>
+            <p className="eyebrow">{content.hero.eyebrow}</p>
+            <h1>{content.hero.title}</h1>
             <p className="hero-intro">
-              和 ReelFoundry 聊聊你的想法，它会帮你完善创意、设计故事与镜头，并一步步生成视频。
+              {content.hero.intro}
             </p>
 
             <div className="hero-actions">
@@ -175,7 +157,7 @@ export function App() {
               />
               <a className="button button-ghost" href="#process">
                 <Play size={18} weight="fill" aria-hidden="true" />
-                观看创作过程
+                {content.hero.secondaryCta}
               </a>
             </div>
 
@@ -190,7 +172,7 @@ export function App() {
 
           <div className="hero-visual" aria-hidden="true">
             <img
-              src="/assets/reelfoundry/hero-travel.png"
+              src={content.hero.image}
               alt=""
               fetchPriority="high"
             />
@@ -306,12 +288,12 @@ export function App() {
 
         <section className={videoActive ? "video-section video-active" : "video-section"}>
           <img
-            src="/assets/reelfoundry/final-video.png"
+            src={content.video.image}
             alt="旅行者在暖色夕阳海岸边的成片画面"
           />
           <div className="video-overlay">
-            <p>从灵感，到成片。</p>
-            <h2>每一个想法，都值得被看见。</h2>
+            <p>{content.video.kicker}</p>
+            <h2>{content.video.title}</h2>
             <button
               type="button"
               className="video-play"
@@ -329,24 +311,18 @@ export function App() {
 
         <section className="local-section" id="local">
           <div className="local-copy" data-reveal>
-            <p className="eyebrow">Local creative workspace</p>
-            <h2>本地运行，创作由你掌控。</h2>
+            <p className="eyebrow">{content.local.eyebrow}</p>
+            <h2>{content.local.title}</h2>
             <ul className="feature-list">
-              <li>
-                <CheckCircle size={22} weight="fill" />
-                项目与素材由本地启动器统一管理。
-              </li>
-              <li>
-                <CheckCircle size={22} weight="fill" />
-                自由选择模型，按照效果与成本切换。
-              </li>
-              <li>
-                <CheckCircle size={22} weight="fill" />
-                对话、分镜和成片保留在同一个创作空间。
-              </li>
+              {content.local.features.map((feature) => (
+                <li key={feature}>
+                  <CheckCircle size={22} weight="fill" />
+                  {feature}
+                </li>
+              ))}
             </ul>
             <a className="text-link" href="#cost">
-              了解费用与数据说明 <ArrowRight size={18} />
+              {content.local.linkLabel} <ArrowRight size={18} />
             </a>
           </div>
 
@@ -408,13 +384,13 @@ export function App() {
 
         <section className="cost-section" id="cost">
           <div className="cost-copy" data-reveal>
-            <p className="eyebrow">Simple and transparent</p>
-            <h2>启动器免费。<br />模型费用，清楚透明。</h2>
+            <p className="eyebrow">{content.cost.eyebrow}</p>
+            <h2>{content.cost.title}</h2>
             <p>
-              ReelFoundry 不收取启动器订阅费。只有在调用你选择的 AI 模型时，才会产生相应的 API 使用费用。
+              {content.cost.body}
             </p>
             <p className="cost-note">
-              实际费用由模型服务商按其公开规则结算，并会因模型、画面数量与视频时长而不同。
+              {content.cost.note}
             </p>
           </div>
 
@@ -445,26 +421,23 @@ export function App() {
         <section className="products-section" id="products">
           <div className="products-heading" data-reveal>
             <div>
-              <p className="eyebrow">More from the foundry</p>
-              <h2>一个产品先做好，更多创作工具慢慢加入。</h2>
+              <p className="eyebrow">{content.products.eyebrow}</p>
+              <h2>{content.products.title}</h2>
             </div>
-            <p>
-              这里已经预留后续产品的展示入口。未来的新产品可以沿用 ReelFoundry
-              的完整介绍结构，接入自己的文案、视觉和下载方式。
-            </p>
+            <p>{content.products.intro}</p>
           </div>
 
           <div className="product-grid" data-reveal>
             <article className="product-card product-card-live">
               <img
-                src="/assets/reelfoundry/hero-travel.png"
-                alt="ReelFoundry 旅行视频创作画面"
+                src={content.products.items[0]?.image || content.hero.image}
+                alt={`${content.products.items[0]?.title || content.brand} 产品画面`}
               />
               <div className="product-card-body">
                 <div>
-                  <span className="product-status">现已开放</span>
-                  <h3>ReelFoundry</h3>
-                  <p>把照片和想法，变成一段值得分享的视频。</p>
+                  <span className="product-status">{content.products.items[0]?.status}</span>
+                  <h3>{content.products.items[0]?.title}</h3>
+                  <p>{content.products.items[0]?.copy}</p>
                 </div>
                 <a href="#top" aria-label="查看 ReelFoundry 产品介绍">
                   <ArrowUpRight size={22} />
@@ -472,15 +445,15 @@ export function App() {
               </div>
             </article>
 
-            {["下一款产品", "未来产品"].map((name, index) => (
-              <article className="product-card product-card-reserved" key={name}>
+            {content.products.items.slice(1).map((product) => (
+              <article className="product-card product-card-reserved" key={product.title}>
                 <span className="reserved-icon" aria-hidden="true">
                   <Plus size={24} />
                 </span>
                 <div>
-                  <span className="product-status">预留产品位 0{index + 2}</span>
-                  <h3>{name}</h3>
-                  <p>可接入同一套长页内容结构。</p>
+                  <span className="product-status">{product.status}</span>
+                  <h3>{product.title}</h3>
+                  <p>{product.copy}</p>
                 </div>
               </article>
             ))}
@@ -489,9 +462,9 @@ export function App() {
 
         <section className="download-section" id="download">
           <div data-reveal>
-            <p className="eyebrow">Start your next story</p>
-            <h2>免费下载 ReelFoundry</h2>
-            <p>在 Windows 与 macOS 上开启你的创作旅程。</p>
+            <p className="eyebrow">{content.download.eyebrow}</p>
+            <h2>{content.download.title}</h2>
+            <p>{content.download.copy}</p>
 
             <div className="download-actions">
               <DownloadButton
@@ -506,7 +479,7 @@ export function App() {
               />
             </div>
 
-            <p className="download-meta">启动器免费 · 支持主流 AI 模型 · 本地项目空间</p>
+            <p className="download-meta">{content.download.meta}</p>
             <p className="download-message" aria-live="polite">
               {downloadMessage}
             </p>
@@ -515,14 +488,14 @@ export function App() {
       </main>
 
       <footer>
-        <a className="wordmark" href="#top">ReelFoundry</a>
+        <a className="wordmark" href="#top">{content.brand}</a>
         <div>
           <a href="#products">产品</a>
           <a href="#process">创作过程</a>
           <a href="#cost">费用说明</a>
           <a href="#download">下载</a>
         </div>
-        <p>© 2026 ReelFoundry</p>
+        <p>© 2026 {content.brand}</p>
       </footer>
     </div>
   );
