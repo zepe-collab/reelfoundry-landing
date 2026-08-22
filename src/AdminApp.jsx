@@ -3,6 +3,7 @@ import {
   ArrowSquareOut,
   Check,
   ImageSquare,
+  Key,
   SignIn,
   SignOut,
   SpinnerGap,
@@ -54,34 +55,54 @@ function ImageField({ label, value, onChange, onUpload, uploading }) {
   );
 }
 
-function Gate({ session }) {
-  if (!session?.signedIn) {
-    return (
-      <main className="admin-gate">
-        <div className="admin-gate-card">
-          <span className="admin-kicker">ReelFoundry Studio</span>
-          <h1>管理你的产品页面</h1>
-          <p>使用你的 ChatGPT 账号登录。管理入口只向站点所有者开放。</p>
-          <a className="admin-primary-button" href="/signin-with-chatgpt?return_to=/admin">
-            <SignIn size={20} /> 使用 ChatGPT 登录
-          </a>
-          <a className="admin-back-link" href="/">返回公开网站</a>
-        </div>
-      </main>
-    );
-  }
+function LoginGate({ onLogin, notice }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error("invalid_login");
+      setPassword("");
+      await onLogin({ signedIn: true, admin: true, username: payload.username || username });
+    } catch {
+      setError("用户名或密码不正确。");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <main className="admin-gate">
-      <div className="admin-gate-card">
+      <form className="admin-gate-card admin-login-card" onSubmit={submit}>
         <span className="admin-kicker">ReelFoundry Studio</span>
-        <h1>这个账号没有管理权限</h1>
-        <p>当前登录账号不是该站点的所有者。请退出后使用创建 ReelFoundry 的账号重新登录。</p>
-        <a className="admin-primary-button" href="/signout-with-chatgpt?return_to=/admin">
-          <SignOut size={20} /> 更换账号
-        </a>
+        <h1>登录管理后台</h1>
+        <p>使用管理员用户名和密码。需要协作时，可以把这一套登录信息交给同事。</p>
+        {notice ? <div className="admin-login-notice">{notice}</div> : null}
+        <div className="admin-login-fields">
+          <Field label="管理员用户名" value={username} onChange={setUsername} />
+          <label className="admin-field">
+            <span>密码</span>
+            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />
+          </label>
+        </div>
+        {error ? <div className="admin-login-error" role="alert">{error}</div> : null}
+        <button className="admin-primary-button" type="submit" disabled={busy || !username || !password}>
+          {busy ? <SpinnerGap className="spin" size={20} /> : <SignIn size={20} />}
+          {busy ? "正在登录" : "登录"}
+        </button>
         <a className="admin-back-link" href="/">返回公开网站</a>
-      </div>
+      </form>
     </main>
   );
 }
@@ -94,6 +115,14 @@ export function AdminApp() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [loginNotice, setLoginNotice] = useState("");
+  const [credentialBusy, setCredentialBusy] = useState(false);
+  const [credentials, setCredentials] = useState({
+    currentPassword: "",
+    newUsername: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   useEffect(() => {
     let active = true;
@@ -137,6 +166,7 @@ export function AdminApp() {
       ["cost", "费用与问答"],
       ["products", "产品展示"],
       ["download", "下载区域"],
+      ["account", "管理员账号"],
     ],
     [],
   );
@@ -202,6 +232,51 @@ export function AdminApp() {
     }
   };
 
+  const logout = async () => {
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => null);
+    setSession({ signedIn: false, admin: false, username: null });
+    setLoginNotice("你已安全退出管理后台。");
+  };
+
+  const updateCredentials = async (event) => {
+    event.preventDefault();
+    if (credentials.newPassword !== credentials.confirmPassword) {
+      setMessage("两次输入的新密码不一致。");
+      return;
+    }
+    setCredentialBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/credentials", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: credentials.currentPassword,
+          newUsername: credentials.newUsername.trim(),
+          newPassword: credentials.newPassword,
+        }),
+      });
+      if (!response.ok) throw new Error("credentials_failed");
+      setCredentials({ currentPassword: "", newUsername: "", newPassword: "", confirmPassword: "" });
+      setSession({ signedIn: false, admin: false, username: null });
+      setLoginNotice("管理员账号已更新，请使用新的用户名和密码重新登录。");
+    } catch {
+      setMessage("账号修改失败。请确认当前密码正确，新密码至少 10 个字符。");
+    } finally {
+      setCredentialBusy(false);
+    }
+  };
+
+  const enterAdmin = async (nextSession) => {
+    setSession(nextSession);
+    try {
+      const response = await fetch("/api/content");
+      if (response.ok) setContent(mergeSiteContent(await response.json()));
+    } catch {
+      setMessage("登录成功，但内容读取失败，请刷新后重试。");
+    }
+  };
+
   if (loading) {
     return (
       <main className="admin-loading">
@@ -210,7 +285,7 @@ export function AdminApp() {
     );
   }
 
-  if (!session?.admin) return <Gate session={session} />;
+  if (!session?.admin) return <LoginGate onLogin={enterAdmin} notice={loginNotice} />;
 
   return (
     <div className="admin-shell">
@@ -218,14 +293,14 @@ export function AdminApp() {
         <div>
           <span className="admin-kicker">ReelFoundry Studio</span>
           <strong>页面管理</strong>
-          <small>{session.email}</small>
+          <small>{session.username}</small>
         </div>
         <nav aria-label="管理内容分区">
           {sections.map(([id, label]) => <a href={`#admin-${id}`} key={id}>{label}</a>)}
         </nav>
         <div className="admin-sidebar-actions">
           <a href="/" target="_blank" rel="noreferrer"><ArrowSquareOut size={18} />查看公开页面</a>
-          <a href="/signout-with-chatgpt?return_to=/admin"><SignOut size={18} />退出登录</a>
+          <button type="button" onClick={logout}><SignOut size={18} />退出登录</button>
         </div>
       </aside>
 
@@ -339,6 +414,39 @@ export function AdminApp() {
             <Field label="介绍" value={content.download.copy} onChange={(value) => updateSection("download", "copy", value)} />
             <Field label="补充信息" value={content.download.meta} onChange={(value) => updateSection("download", "meta", value)} />
           </div>
+        </section>
+
+        <section className="admin-panel" id="admin-account">
+          <div className="admin-panel-heading">
+            <span>08</span>
+            <div><h2>管理员账号</h2><p>修改唯一的后台用户名和密码。修改后所有已登录设备都会退出。</p></div>
+          </div>
+          <div className="admin-account-summary">
+            <span><Key size={22} /></span>
+            <div><small>当前管理员用户名</small><strong>{session.username}</strong></div>
+          </div>
+          <form className="admin-credentials-form" onSubmit={updateCredentials}>
+            <div className="admin-grid admin-grid-two">
+              <label className="admin-field">
+                <span>当前密码</span>
+                <input type="password" value={credentials.currentPassword} onChange={(event) => setCredentials((value) => ({ ...value, currentPassword: event.target.value }))} autoComplete="current-password" />
+              </label>
+              <Field label="新的管理员用户名" value={credentials.newUsername} onChange={(value) => setCredentials((current) => ({ ...current, newUsername: value }))} hint="建议使用 3–40 个字母、数字、下划线或短横线。" />
+              <label className="admin-field">
+                <span>新密码</span>
+                <input type="password" value={credentials.newPassword} onChange={(event) => setCredentials((value) => ({ ...value, newPassword: event.target.value }))} autoComplete="new-password" />
+                <small>至少 10 个字符，建议混合字母、数字和符号。</small>
+              </label>
+              <label className="admin-field">
+                <span>再次输入新密码</span>
+                <input type="password" value={credentials.confirmPassword} onChange={(event) => setCredentials((value) => ({ ...value, confirmPassword: event.target.value }))} autoComplete="new-password" />
+              </label>
+            </div>
+            <button className="admin-secondary-button" type="submit" disabled={credentialBusy || !credentials.currentPassword || !credentials.newUsername || !credentials.newPassword || !credentials.confirmPassword}>
+              {credentialBusy ? <SpinnerGap className="spin" size={18} /> : <Key size={18} />}
+              {credentialBusy ? "正在更新" : "更新管理员账号"}
+            </button>
+          </form>
         </section>
 
         <div className="admin-bottom-bar">

@@ -1460,12 +1460,59 @@ summary:focus-visible {
   margin-top: auto;
 }
 
-.admin-sidebar-actions a {
+.admin-sidebar-actions a,
+.admin-sidebar-actions button {
   display: flex;
   align-items: center;
   gap: 9px;
   color: #6e6e73;
+  background: transparent;
+  border: 0;
+  padding: 0;
   font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-login-card {
+  text-align: left;
+}
+
+.admin-login-card > .admin-kicker,
+.admin-login-card > h1,
+.admin-login-card > p {
+  text-align: center;
+}
+
+.admin-login-fields {
+  display: grid;
+  gap: 16px;
+  margin: 26px 0 18px;
+}
+
+.admin-login-card > .admin-primary-button {
+  width: 100%;
+}
+
+.admin-login-error,
+.admin-login-notice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-login-error {
+  color: #9d1c18;
+  background: #fff0ef;
+  border: 1px solid #ffd5d2;
+}
+
+.admin-login-notice {
+  color: #175c36;
+  background: #ecf8f1;
+  border: 1px solid #ccebd9;
 }
 
 .admin-main {
@@ -1684,6 +1731,44 @@ summary:focus-visible {
 
 .admin-faq-editors {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-account-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 16px 18px;
+  background: #f8f8fa;
+  border: 1px solid #e5e5e8;
+  border-radius: 16px;
+}
+
+.admin-account-summary > span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--blue);
+  background: var(--soft-blue);
+  border-radius: 12px;
+}
+
+.admin-account-summary div {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-account-summary small {
+  color: #86868b;
+}
+
+.admin-account-summary strong {
+  font-size: 17px;
+}
+
+.admin-credentials-form > .admin-secondary-button {
+  margin-top: 22px;
 }
 
 .admin-bottom-bar {
