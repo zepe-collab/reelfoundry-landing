@@ -17,6 +17,6 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - The product is a free local Windows and macOS launcher with a conversational creative agent; users pay official model API usage fees.
 - Preserve the bright white visual system, generous spacing, warm travel imagery, and the narrative sequence: conversation → creative directions → storyboard → finished video → local launcher → transparent cost explanation → download.
 - Keep the site expandable into a multi-product catalog. ReelFoundry is the first complete product; preserve at least two clearly labeled reserved product slots that can reuse the same long-form content structure later.
-- Provide a protected visual management route at `/admin`; the public page remains readable without sign-in, while content edits and image uploads require the single custom administrator username and password.
+- Provide a protected visual management entry at `/#/admin`; the public page remains readable without sign-in, while content edits and image uploads require the single custom administrator username and password. Keep the hash route because the hosted dispatcher redirects `/admin` to `/` before the app loads.
 - The administrator can change that username and password inside the backend. Do not expose plaintext credentials in page source or repository files.
 - Store editable page content in D1 and uploaded images in R2. A successful save updates the public page immediately without changing its URL.
