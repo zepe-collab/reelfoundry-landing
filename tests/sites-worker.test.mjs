@@ -8,7 +8,7 @@ const ORIGIN = "https://example.test";
 const TEST_USERNAME = "reelfoundry-admin";
 const TEST_PASSWORD = "correct-horse-2026";
 const TEST_SALT = "00112233445566778899aabbccddeeff";
-const TEST_HASH = pbkdf2Sync(TEST_PASSWORD, Buffer.from(TEST_SALT, "hex"), 150_000, 32, "sha256").toString("hex");
+const TEST_HASH = pbkdf2Sync(TEST_PASSWORD, Buffer.from(TEST_SALT, "hex"), 100_000, 32, "sha256").toString("hex");
 
 function createD1Mock() {
   const state = { contentJson: null, credential: null, sessions: new Map(), attempts: new Map(), statements: [] };

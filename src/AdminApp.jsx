@@ -71,12 +71,22 @@ function LoginGate({ onLogin, notice }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error("invalid_login");
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (response.status === 401) throw new Error("invalid_login");
+        if (response.status === 429) throw new Error("too_many_attempts");
+        throw new Error("login_unavailable");
+      }
       setPassword("");
       await onLogin({ signedIn: true, admin: true, username: payload.username || username });
-    } catch {
-      setError("用户名或密码不正确。");
+    } catch (loginError) {
+      setError(
+        loginError.message === "invalid_login"
+          ? "用户名或密码不正确。"
+          : loginError.message === "too_many_attempts"
+            ? "尝试次数过多，请在 15 分钟后再试。"
+            : "登录服务暂时不可用，请稍后重试。",
+      );
     } finally {
       setBusy(false);
     }
@@ -261,7 +271,7 @@ export function AdminApp() {
       setSession({ signedIn: false, admin: false, username: null });
       setLoginNotice("管理员账号已更新，请使用新的用户名和密码重新登录。");
     } catch {
-      setMessage("账号修改失败。请确认当前密码正确，新密码至少 10 个字符。");
+      setMessage("账号修改失败。请确认当前密码正确，新密码至少 12 个字符。");
     } finally {
       setCredentialBusy(false);
     }
@@ -435,7 +445,7 @@ export function AdminApp() {
               <label className="admin-field">
                 <span>新密码</span>
                 <input type="password" value={credentials.newPassword} onChange={(event) => setCredentials((value) => ({ ...value, newPassword: event.target.value }))} autoComplete="new-password" />
-                <small>至少 10 个字符，建议混合字母、数字和符号。</small>
+                <small>至少 12 个字符，建议混合字母、数字和符号。</small>
               </label>
               <label className="admin-field">
                 <span>再次输入新密码</span>

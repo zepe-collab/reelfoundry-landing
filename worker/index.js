@@ -5,7 +5,8 @@ const SESSION_COOKIE = "reelfoundry_admin_session";
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_FAILURES = 5;
-const PBKDF2_ITERATIONS = 150_000;
+// Cloudflare Workers currently caps a single PBKDF2 operation at 100,000 iterations.
+const PBKDF2_ITERATIONS = 100_000;
 const PASSWORD_SALT_BYTES = 16;
 const PASSWORD_HASH_BYTES = 32;
 const IMAGE_TYPES = new Map([
@@ -561,7 +562,7 @@ async function handleCredentials(request, env) {
   const currentExpected = decodeSecret(credential.passwordHash) || DUMMY_HASH;
   const currentActual = await derivePasswordHash(currentPassword, currentSalt);
   if (!constantTimeEqual(currentActual, currentExpected)) return invalidLoginResponse();
-  if (!isValidUsername(newUsername) || newPassword.length < 10 || newPassword.length > 256) {
+  if (!isValidUsername(newUsername) || newPassword.length < 12 || newPassword.length > 256) {
     return jsonResponse({ error: "invalid_new_credentials" }, 400);
   }
 
