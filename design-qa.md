@@ -18,6 +18,12 @@ This section supersedes the earlier white-carousel comparison notes below. The p
 - ReelFoundry keeps one source of truth through the existing dedicated sections instead of exposing a duplicate nested story form.
 - Story merge coverage was added to the Sites worker test file. `npm run build` passed and `npm run test:sites` completed with 14 passed, 0 failed on 2026-08-24.
 
+### Remember this device
+
+- The admin login now includes a default-enabled “在此设备保持登录” option. When selected, the server issues an opaque 30-day HttpOnly, SameSite=Strict, Secure cookie; the password is never written to browser storage.
+- When the option is cleared, the cookie is browser-session-only while the corresponding server-side session retains its normal seven-day upper bound.
+- `npm run build` passed and `npm run test:sites` completed with 15 passed, 0 failed on 2026-08-24.
+
 ## Comparison target
 
 - Source visual truth: `F:\projects\产品前端网页\reelfoundry-landing\reference-option-1.png` for the established bright-white Pixel Core/ReelFoundry design language, plus the user's circular-carousel interaction specification and the structural reference at `C:\Users\hp\AppData\Local\Temp\codex-clipboard-653af1ca-feb1-4028-b9a6-b497a41de147.png`.

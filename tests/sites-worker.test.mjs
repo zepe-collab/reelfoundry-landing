@@ -105,11 +105,11 @@ function sessionCookie(response) {
   return setCookie.split(";", 1)[0];
 }
 
-async function login(env, username = TEST_USERNAME, password = TEST_PASSWORD) {
+async function login(env, username = TEST_USERNAME, password = TEST_PASSWORD, remember = false) {
   const response = await worker.fetch(new Request(`${ORIGIN}/api/admin/login`, {
     method: "POST",
     headers: stateChangingHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, remember }),
   }), env);
   return { response, cookie: response.ok ? sessionCookie(response) : null };
 }
@@ -154,9 +154,21 @@ test("bootstraps the custom account and authenticates with an HttpOnly cookie", 
   assert.equal(response.status, 200);
   assert.match(response.headers.get("set-cookie"), /HttpOnly/);
   assert.match(response.headers.get("set-cookie"), /SameSite=Strict/);
+  assert.doesNotMatch(response.headers.get("set-cookie"), /Max-Age=/);
   assert.equal(env.DB.state.credential.username, TEST_USERNAME);
   const session = await worker.fetch(new Request(`${ORIGIN}/api/admin/session`, { headers: { cookie } }), env);
   assert.deepEqual(await session.json(), { signedIn: true, admin: true, username: TEST_USERNAME });
+});
+
+test("keeps a remembered admin session on the device for thirty days", async () => {
+  const env = createEnv();
+  const { response, cookie } = await login(env, TEST_USERNAME, TEST_PASSWORD, true);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("set-cookie"), /Max-Age=2592000/);
+  assert.match(response.headers.get("set-cookie"), /HttpOnly/);
+  assert.match(response.headers.get("set-cookie"), /Secure/);
+  const session = await worker.fetch(new Request(`${ORIGIN}/api/admin/session`, { headers: { cookie } }), env);
+  assert.equal((await session.json()).signedIn, true);
 });
 
 test("rejects a wrong password without revealing account details", async () => {

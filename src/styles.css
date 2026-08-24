@@ -1815,7 +1815,40 @@ summary:focus-visible {
 .admin-login-fields {
   display: grid;
   gap: 16px;
-  margin: 26px 0 18px;
+  margin: 26px 0 14px;
+}
+
+.admin-remember-device {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 20px;
+  color: #3f3f46;
+  cursor: pointer;
+}
+
+.admin-remember-device input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--blue);
+  flex: 0 0 auto;
+}
+
+.admin-remember-device span {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-remember-device strong {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.admin-remember-device small {
+  color: #77777d;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .admin-login-card > .admin-primary-button {

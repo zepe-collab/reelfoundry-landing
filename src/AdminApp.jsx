@@ -58,6 +58,7 @@ function ImageField({ label, value, onChange, onUpload, uploading }) {
 function LoginGate({ onLogin, notice }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberDevice, setRememberDevice] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -69,7 +70,7 @@ function LoginGate({ onLogin, notice }) {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, remember: rememberDevice }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -106,6 +107,17 @@ function LoginGate({ onLogin, notice }) {
             <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />
           </label>
         </div>
+        <label className="admin-remember-device">
+          <input
+            type="checkbox"
+            checked={rememberDevice}
+            onChange={(event) => setRememberDevice(event.target.checked)}
+          />
+          <span>
+            <strong>在此设备保持登录</strong>
+            <small>30 天内无需重新输入；共享设备请取消勾选。</small>
+          </span>
+        </label>
         {error ? <div className="admin-login-error" role="alert">{error}</div> : null}
         <button className="admin-primary-button" type="submit" disabled={busy || !username || !password}>
           {busy ? <SpinnerGap className="spin" size={20} /> : <SignIn size={20} />}

@@ -3,6 +3,7 @@ const MAX_CONTENT_BYTES = 1024 * 1024;
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 const SESSION_COOKIE = "reelfoundry_admin_session";
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
+const REMEMBERED_SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_FAILURES = 5;
 // Cloudflare Workers currently caps a single PBKDF2 operation at 100,000 iterations.
@@ -236,14 +237,14 @@ function readCookie(request, name) {
   return null;
 }
 
-function sessionCookie(request, token) {
+function sessionCookie(request, token, remember) {
   const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
+  const persistence = remember ? `; Max-Age=${REMEMBERED_SESSION_TTL_SECONDS}` : "";
   return (
     SESSION_COOKIE +
     "=" +
     encodeURIComponent(token) +
-    "; Max-Age=" +
-    SESSION_TTL_SECONDS +
+    persistence +
     "; Path=/; HttpOnly; SameSite=Strict" +
     secure
   );
@@ -362,6 +363,7 @@ async function handleLogin(request, env) {
   const body = await readJsonBody(request, 16 * 1024);
   const username = typeof body.value?.username === "string" ? body.value.username : "";
   const password = typeof body.value?.password === "string" ? body.value.password : "";
+  const remember = body.value?.remember === true;
   const attempt = await readLoginAttempt(request, env, username);
   if (attempt.unavailable) return jsonResponse({ error: "database_unavailable" }, 503);
   if (attempt.blocked) return jsonResponse({ error: "too_many_attempts" }, 429);
@@ -395,7 +397,10 @@ async function handleLogin(request, env) {
 
     const token = encodeBase64Url(randomBytes(32));
     const tokenHash = await hashSessionToken(token);
-    const expiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString();
+    const sessionTtlSeconds = remember
+      ? REMEMBERED_SESSION_TTL_SECONDS
+      : SESSION_TTL_SECONDS;
+    const expiresAt = new Date(Date.now() + sessionTtlSeconds * 1000).toISOString();
     await env.DB
       .prepare(
         "INSERT INTO admin_sessions (token_hash, expires_at, created_at) VALUES (?, ?, ?)",
@@ -407,7 +412,7 @@ async function handleLogin(request, env) {
     return jsonResponse(
       { ok: true, username: candidate.username },
       200,
-      { "set-cookie": sessionCookie(request, token) },
+      { "set-cookie": sessionCookie(request, token, remember) },
     );
   } catch {
     return jsonResponse({ error: "login_unavailable" }, 503);
