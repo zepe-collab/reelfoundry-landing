@@ -1,12 +1,12 @@
 {
-  "brand": "ReelFoundry",
+  "brand": "Pixel Core",
   "hero": {
-    "eyebrow": "本地运行的 AI 视频创意搭档",
-    "title": "把你的照片和想法，变成一段值得分享的视频。",
-    "intro": "和 ReelFoundry 聊聊你的想法，它会帮你完善创意、设计故事与镜头，并一步步生成视频。",
-    "primaryCta": "免费下载",
-    "secondaryCta": "观看创作过程",
-    "image": "/assets/reelfoundry/hero-travel.png"
+    "eyebrow": "AI 产品与 Skills 工作室",
+    "title": "把灵感交给 AI，打磨成真正好用的产品。",
+    "intro": "Pixel Core 专注于用 AI 打造产品与 Skills，让创意更快从想法走向可用、可分享的作品。",
+    "primaryCta": "探索产品",
+    "secondaryCta": "认识 ReelFoundry",
+    "image": "/assets/pixel-core/hero-travel.png"
   },
   "directions": [
     {"title": "治愈日常", "copy": "把旅行里的安静片刻，剪成一段温柔的日记。", "image": "/assets/reelfoundry/final-video.png"},
@@ -33,13 +33,13 @@
     {"question": "可以使用不同的模型吗？", "answer": "可以。ReelFoundry 计划支持多种主流模型，让你根据效果、速度和成本自由选择。"}
   ],
   "products": {
-    "eyebrow": "More from the foundry",
-    "title": "一个产品先做好，更多创作工具慢慢加入。",
-    "intro": "这里已经预留后续产品的展示入口。未来的新产品可以沿用 ReelFoundry 的完整介绍结构，接入自己的文案、视觉和下载方式。",
+    "eyebrow": "Pixel Core Products",
+    "title": "选择一件产品，查看它完整的创作故事。",
+    "intro": "左右切换舞台上的产品，下面的场景、流程、视觉展示与行动区域会一起更新。",
     "items": [
-      {"status": "现已开放", "title": "ReelFoundry", "copy": "把照片和想法，变成一段值得分享的视频。", "image": "/assets/reelfoundry/hero-travel.png", "type": "live"},
-      {"status": "预留产品位 02", "title": "下一款产品", "copy": "可接入同一套长页内容结构。", "image": "", "type": "reserved"},
-      {"status": "预留产品位 03", "title": "未来产品", "copy": "可接入同一套长页内容结构。", "image": "", "type": "reserved"}
+      {"status": "现已推出", "title": "ReelFoundry", "copy": "把你的照片和想法，变成一段值得分享的视频。", "image": "/assets/pixel-core/reelfoundry-card.png", "features": ["用对话把模糊想法变成可执行的创意方案", "从照片、脚本、分镜到视频，在一个流程里完成", "本地启动器免费，模型与 API 成本由用户掌控"], "type": "live"},
+      {"status": "即将推出 · 概念占位", "title": "产品概念 02", "copy": "第二件 AI 产品的完整展示位置，等待下一次灵感落地。", "image": "/assets/pixel-core/motioncanvas-card.png", "features": ["保留独立价值主张与真实使用场景", "从输入、工作流到结果拥有完整叙事", "确定产品之前不虚构功能与上线状态"], "type": "reserved"},
+      {"status": "即将推出 · 概念占位", "title": "产品概念 03", "copy": "第三件 AI 产品的独立叙事空间，为 Pixel Core 的下一步预留。", "image": "/assets/pixel-core/storyboard-card.png", "features": ["展示产品如何从输入开始带用户走向结果", "突出最有辨识度的能力而不是堆砌功能", "完整说明获取方式、运行环境与成本结构"], "type": "reserved"}
     ]
   },
   "download": {"eyebrow": "Start your next story", "title": "免费下载 ReelFoundry", "copy": "在 Windows 与 macOS 上开启你的创作旅程。", "meta": "启动器免费 · 支持主流 AI 模型 · 本地项目空间"}

@@ -3,8 +3,9 @@ import {
   AppleLogo,
   ArrowDown,
   ArrowRight,
-  ArrowUpRight,
   CaretDown,
+  CaretLeft,
+  CaretRight,
   ChatCircleDots,
   CheckCircle,
   Circle,
@@ -15,7 +16,6 @@ import {
   Monitor,
   Pause,
   Play,
-  Plus,
   ShieldCheck,
   Sparkle,
   SquaresFour,
@@ -31,7 +31,12 @@ function useSiteContent() {
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/content", { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : null))
+      .then((response) => {
+        const contentType = response.headers.get("content-type") || "";
+        return response.ok && contentType.includes("application/json")
+          ? response.json()
+          : null;
+      })
       .then((value) => {
         if (value) setContent(mergeSiteContent(value));
       })
@@ -66,8 +71,258 @@ function DownloadButton({ platform, primary = false, onDownload }) {
   );
 }
 
+const productFallbackImages = [
+  "/assets/pixel-core/reelfoundry-card.png",
+  "/assets/pixel-core/motioncanvas-card.png",
+  "/assets/pixel-core/storyboard-card.png",
+];
+
+function ProductCarousel({ productsContent, activeIndex, setActiveIndex }) {
+  const products = productsContent.items?.length
+    ? productsContent.items
+    : defaultSiteContent.products.items;
+
+  const move = (direction) => {
+    setActiveIndex((current) => (current + direction + products.length) % products.length);
+  };
+
+  const positionFor = (index) => {
+    let distance = index - activeIndex;
+    if (distance > products.length / 2) distance -= products.length;
+    if (distance < -products.length / 2) distance += products.length;
+    if (distance === 0) return "active";
+    if (distance === -1) return "previous";
+    if (distance === 1) return "next";
+    return "hidden";
+  };
+
+  const activeProduct = products[activeIndex] || products[0];
+  const activeFeatures = activeProduct?.features?.filter(Boolean) || [];
+
+  return (
+    <section className="product-carousel-section" id="products">
+      <div className="product-carousel-heading" data-reveal>
+        <div>
+          <p className="eyebrow">{productsContent.eyebrow}</p>
+          <h2>{productsContent.title}</h2>
+        </div>
+        <p>{productsContent.intro}</p>
+      </div>
+
+      <div
+        className="product-orbit"
+        data-reveal
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            move(-1);
+          }
+          if (event.key === "ArrowRight") {
+            event.preventDefault();
+            move(1);
+          }
+        }}
+        aria-label="产品轮转展示，可使用左右方向键切换"
+      >
+        <div className="product-orbit-stage">
+          {products.map((product, index) => {
+            const position = positionFor(index);
+            const image = product.image || productFallbackImages[index % productFallbackImages.length];
+            return (
+              <button
+                className={`product-orbit-card product-orbit-${position}`}
+                type="button"
+                key={`${product.title}-${index}`}
+                onClick={() => setActiveIndex(index)}
+                aria-label={`查看 ${product.title}`}
+                aria-current={position === "active" ? "true" : undefined}
+                tabIndex={position === "hidden" ? -1 : 0}
+              >
+                <span className="product-orbit-image">
+                  <img src={image} alt="" />
+                </span>
+                <span className={product.type === "live" ? "product-orbit-status is-live" : "product-orbit-status"}>
+                  {product.status}
+                </span>
+                <span className="product-orbit-caption">
+                  <strong>{product.title}</strong>
+                </span>
+              </button>
+            );
+          })}
+          {products.length > 1 ? (
+            <>
+              <button
+                className="product-orbit-side-hit product-orbit-side-hit-left"
+                type="button"
+                onClick={() => move(-1)}
+                aria-label={`选择左侧产品 ${products[(activeIndex - 1 + products.length) % products.length].title}`}
+              />
+              <button
+                className="product-orbit-side-hit product-orbit-side-hit-right"
+                type="button"
+                onClick={() => move(1)}
+                aria-label={`选择右侧产品 ${products[(activeIndex + 1) % products.length].title}`}
+              />
+            </>
+          ) : null}
+        </div>
+
+        <div className="product-orbit-controls">
+          <button type="button" onClick={() => move(-1)} aria-label="查看上一个产品">
+            <CaretLeft size={24} weight="bold" />
+          </button>
+          <div className="product-orbit-dots" aria-label={`第 ${activeIndex + 1} 个，共 ${products.length} 个产品`}>
+            {products.map((product, index) => (
+              <button
+                type="button"
+                key={`${product.title}-dot-${index}`}
+                className={index === activeIndex ? "is-active" : ""}
+                onClick={() => setActiveIndex(index)}
+                aria-label={`切换到 ${product.title}`}
+                aria-current={index === activeIndex ? "true" : undefined}
+              />
+            ))}
+          </div>
+          <button type="button" onClick={() => move(1)} aria-label="查看下一个产品">
+            <CaretRight size={24} weight="bold" />
+          </button>
+        </div>
+      </div>
+
+      <article className="product-orbit-detail" key={activeIndex} aria-live="polite">
+        <div className="product-orbit-detail-title">
+          <span className={activeProduct?.type === "live" ? "is-live" : ""}>{activeProduct?.status}</span>
+          <h3>{activeProduct?.title}</h3>
+          <p>{activeProduct?.copy}</p>
+        </div>
+        <ul>
+          {activeFeatures.map((feature) => (
+            <li key={feature}>
+              <CheckCircle size={21} weight="fill" aria-hidden="true" />
+              {feature}
+            </li>
+          ))}
+        </ul>
+        {activeProduct?.type === "live" ? (
+          <a className="button product-orbit-link" href="#process">
+            查看完整介绍 <ArrowDown size={18} />
+          </a>
+        ) : (
+          <a className="button product-orbit-link" href="#product-story">
+            查看概念占位故事 <ArrowDown size={18} />
+          </a>
+        )}
+      </article>
+    </section>
+  );
+}
+
+const conceptStoryIcons = [ChatCircleDots, SquaresFour, CheckCircle];
+
+function ProductConceptStory({ product, productIndex, onBackToStage }) {
+  const image = product.image || productFallbackImages[productIndex % productFallbackImages.length];
+  const features = product.features?.filter(Boolean) || [];
+  const story = product.story || defaultSiteContent.products.items[productIndex]?.story;
+
+  return (
+    <div className="concept-story" id="product-story" key={productIndex}>
+      <section className="concept-overview">
+        <p className="concept-pill">{product.status}</p>
+        <h2>{product.title}</h2>
+        <span className="concept-title-mark" aria-hidden="true" />
+        <p className="concept-promise">{product.copy}</p>
+        <div className="concept-feature-grid">
+          {features.map((feature, index) => {
+            const Icon = conceptStoryIcons[index % conceptStoryIcons.length];
+            return (
+              <article key={feature}>
+                <span><Icon size={28} weight="regular" aria-hidden="true" /></span>
+                <h3>{story.steps[index]?.title || `产品能力 ${index + 1}`}</h3>
+                <p>{feature}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="concept-flow-section">
+        <div className="concept-section-heading">
+          <p className="eyebrow">{story.eyebrow}</p>
+          <h2>{story.title}</h2>
+          <p>{story.description}</p>
+        </div>
+
+        <div className="concept-conversation" aria-label={`${product.title} 对话体验示例`}>
+          {story.prompts.map((prompt, index) => (
+            <div className={index % 2 === 0 ? "concept-message is-user" : "concept-message is-agent"} key={prompt}>
+              <span aria-hidden="true">
+                {index % 2 === 0 ? <User size={20} weight="fill" /> : <Sparkle size={20} weight="fill" />}
+              </span>
+              <p>{prompt}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="concept-step-grid">
+          {story.steps.map((step, index) => {
+            const Icon = conceptStoryIcons[index % conceptStoryIcons.length];
+            return (
+              <article key={step.title}>
+                <small>0{index + 1}</small>
+                <Icon size={27} weight="regular" aria-hidden="true" />
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="concept-visual-story">
+        <img src={story.visualImage || image} alt={`${product.title} 产品叙事预览`} />
+        <div>
+          <p className="eyebrow">{story.visualEyebrow}</p>
+          <h2>{story.visualTitle}</h2>
+          <p>{story.visualText}</p>
+        </div>
+      </section>
+
+      <section className="concept-workspace-section">
+        <div>
+          <p className="eyebrow">{story.workspaceEyebrow}</p>
+          <h2>{story.workspaceTitle}</h2>
+          <p>{story.workspaceText}</p>
+          <ul>
+            {story.bullets.map((bullet) => (
+              <li key={bullet}><CheckCircle size={20} weight="fill" aria-hidden="true" /> {bullet}</li>
+            ))}
+          </ul>
+        </div>
+        <figure>
+          <img src={story.workspaceImage || image} alt={`${product.title} 产品体验预览`} />
+          <figcaption>{product.title} · 概念占位预览</figcaption>
+        </figure>
+      </section>
+
+      <section className="concept-cta-section">
+        <p className="eyebrow">{story.ctaEyebrow}</p>
+        <h2>{story.ctaTitle}</h2>
+        <p>{story.ctaText}</p>
+        <button type="button" onClick={onBackToStage}>
+          <ArrowRight size={19} /> {story.ctaLabel}
+        </button>
+      </section>
+    </div>
+  );
+}
+
 export function App() {
   const content = useSiteContent();
+  const productItems = content.products.items?.length
+    ? content.products.items
+    : defaultSiteContent.products.items;
   const directions = content.directions;
   const questions = content.faq;
   const detectedPlatform = usePlatform();
@@ -75,6 +330,14 @@ export function App() {
   const [selectedPlatform, setSelectedPlatform] = useState(detectedPlatform);
   const [downloadMessage, setDownloadMessage] = useState("");
   const [videoActive, setVideoActive] = useState(false);
+  const [activeProductIndex, setActiveProductIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveProductIndex((current) => Math.min(current, productItems.length - 1));
+  }, [productItems.length]);
+
+  const activeProduct = productItems[activeProductIndex] || productItems[0];
+  const reelFoundryActive = activeProduct?.type === "live";
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -110,24 +373,31 @@ export function App() {
           <a href="#products" onClick={() => setMenuOpen(false)}>
             产品
           </a>
-          <a href="#process" onClick={() => setMenuOpen(false)}>
-            创作过程
-          </a>
-          <a href="#cost" onClick={() => setMenuOpen(false)}>
-            费用说明
-          </a>
-          <a href="#download" onClick={() => setMenuOpen(false)}>
-            下载
-          </a>
+          {reelFoundryActive ? (
+            <>
+              <a href="#process" onClick={() => setMenuOpen(false)}>
+                创作过程
+              </a>
+              <a href="#cost" onClick={() => setMenuOpen(false)}>
+                费用说明
+              </a>
+              <a href="#download" onClick={() => setMenuOpen(false)}>
+                下载
+              </a>
+            </>
+          ) : (
+            <a href="#product-story" onClick={() => setMenuOpen(false)}>
+              产品介绍
+            </a>
+          )}
         </nav>
 
-        <button
+        <a
           className="nav-download"
-          type="button"
-          onClick={() => handleDownload(detectedPlatform)}
+          href="#products"
         >
           {content.hero.primaryCta}
-        </button>
+        </a>
 
         <button
           className="menu-button"
@@ -150,23 +420,20 @@ export function App() {
             </p>
 
             <div className="hero-actions">
-              <DownloadButton
-                platform={detectedPlatform}
-                primary
-                onDownload={handleDownload}
-              />
+              <a className="button button-primary" href="#products">
+                <SquaresFour size={19} weight="fill" aria-hidden="true" />
+                {content.hero.primaryCta}
+              </a>
               <a className="button button-ghost" href="#process">
                 <Play size={18} weight="fill" aria-hidden="true" />
                 {content.hero.secondaryCta}
               </a>
             </div>
 
-            <p className="platform-note">
-              <WindowsLogo size={17} weight="fill" aria-hidden="true" />
-              Windows
-              <AppleLogo size={17} weight="fill" aria-hidden="true" />
-              macOS
-              <span>启动器免费</span>
+            <p className="studio-note">
+              <span>AI 产品</span>
+              <span>Skills</span>
+              <span>独立工作室</span>
             </p>
           </div>
 
@@ -178,13 +445,21 @@ export function App() {
             />
           </div>
 
-          <a className="scroll-cue" href="#process" aria-label="向下查看创作过程">
+          <a className="scroll-cue" href="#products" aria-label="向下查看产品展示">
             向下探索
             <ArrowDown size={18} />
           </a>
         </section>
 
-        <section className="conversation-section" id="process">
+        <ProductCarousel
+          productsContent={content.products}
+          activeIndex={activeProductIndex}
+          setActiveIndex={setActiveProductIndex}
+        />
+
+        {reelFoundryActive ? (
+          <>
+            <section className="conversation-section" id="process">
           <div className="section-heading" data-reveal>
             <p className="eyebrow">Conversation to creation</p>
             <h2>从一次对话开始，创意自然展开。</h2>
@@ -284,9 +559,9 @@ export function App() {
               </div>
             </div>
           </div>
-        </section>
+            </section>
 
-        <section className={videoActive ? "video-section video-active" : "video-section"}>
+            <section className={videoActive ? "video-section video-active" : "video-section"}>
           <img
             src={content.video.image}
             alt="旅行者在暖色夕阳海岸边的成片画面"
@@ -307,9 +582,9 @@ export function App() {
               {videoActive ? "正在播放创作预览" : "18 秒创作预览"}
             </span>
           </div>
-        </section>
+            </section>
 
-        <section className="local-section" id="local">
+            <section className="local-section" id="local">
           <div className="local-copy" data-reveal>
             <p className="eyebrow">{content.local.eyebrow}</p>
             <h2>{content.local.title}</h2>
@@ -380,9 +655,9 @@ export function App() {
               </div>
             </div>
           </div>
-        </section>
+            </section>
 
-        <section className="cost-section" id="cost">
+            <section className="cost-section" id="cost">
           <div className="cost-copy" data-reveal>
             <p className="eyebrow">{content.cost.eyebrow}</p>
             <h2>{content.cost.title}</h2>
@@ -416,51 +691,9 @@ export function App() {
               </details>
             ))}
           </div>
-        </section>
+            </section>
 
-        <section className="products-section" id="products">
-          <div className="products-heading" data-reveal>
-            <div>
-              <p className="eyebrow">{content.products.eyebrow}</p>
-              <h2>{content.products.title}</h2>
-            </div>
-            <p>{content.products.intro}</p>
-          </div>
-
-          <div className="product-grid" data-reveal>
-            <article className="product-card product-card-live">
-              <img
-                src={content.products.items[0]?.image || content.hero.image}
-                alt={`${content.products.items[0]?.title || content.brand} 产品画面`}
-              />
-              <div className="product-card-body">
-                <div>
-                  <span className="product-status">{content.products.items[0]?.status}</span>
-                  <h3>{content.products.items[0]?.title}</h3>
-                  <p>{content.products.items[0]?.copy}</p>
-                </div>
-                <a href="#top" aria-label="查看 ReelFoundry 产品介绍">
-                  <ArrowUpRight size={22} />
-                </a>
-              </div>
-            </article>
-
-            {content.products.items.slice(1).map((product) => (
-              <article className="product-card product-card-reserved" key={product.title}>
-                <span className="reserved-icon" aria-hidden="true">
-                  <Plus size={24} />
-                </span>
-                <div>
-                  <span className="product-status">{product.status}</span>
-                  <h3>{product.title}</h3>
-                  <p>{product.copy}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="download-section" id="download">
+            <section className="download-section" id="download">
           <div data-reveal>
             <p className="eyebrow">{content.download.eyebrow}</p>
             <h2>{content.download.title}</h2>
@@ -484,16 +717,30 @@ export function App() {
               {downloadMessage}
             </p>
           </div>
-        </section>
+            </section>
+          </>
+        ) : (
+          <ProductConceptStory
+            product={activeProduct}
+            productIndex={activeProductIndex}
+            onBackToStage={() => document.querySelector("#products")?.scrollIntoView({ behavior: "smooth" })}
+          />
+        )}
       </main>
 
       <footer>
         <a className="wordmark" href="#top">{content.brand}</a>
         <div>
           <a href="#products">产品</a>
-          <a href="#process">创作过程</a>
-          <a href="#cost">费用说明</a>
-          <a href="#download">下载</a>
+          {reelFoundryActive ? (
+            <>
+              <a href="#process">创作过程</a>
+              <a href="#cost">费用说明</a>
+              <a href="#download">下载</a>
+            </>
+          ) : (
+            <a href="#product-story">产品介绍</a>
+          )}
         </div>
         <p>© 2026 {content.brand}</p>
       </footer>

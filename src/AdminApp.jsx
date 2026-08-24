@@ -95,7 +95,7 @@ function LoginGate({ onLogin, notice }) {
   return (
     <main className="admin-gate">
       <form className="admin-gate-card admin-login-card" onSubmit={submit}>
-        <span className="admin-kicker">ReelFoundry Studio</span>
+        <span className="admin-kicker">Pixel Core Studio</span>
         <h1>登录管理后台</h1>
         <p>使用管理员用户名和密码。需要协作时，可以把这一套登录信息交给同事。</p>
         {notice ? <div className="admin-login-notice">{notice}</div> : null}
@@ -205,6 +205,16 @@ export function AdminApp() {
       return draft;
     });
 
+  const updateProductFeature = (productIndex, featureIndex, value) =>
+    change((draft) => {
+      const features = Array.isArray(draft.products.items[productIndex].features)
+        ? [...draft.products.items[productIndex].features]
+        : ["", "", ""];
+      features[featureIndex] = value;
+      draft.products.items[productIndex].features = features;
+      return draft;
+    });
+
   const save = async () => {
     setSaving(true);
     setMessage("");
@@ -301,7 +311,7 @@ export function AdminApp() {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <div>
-          <span className="admin-kicker">ReelFoundry Studio</span>
+          <span className="admin-kicker">Pixel Core Studio</span>
           <strong>页面管理</strong>
           <small>{session.username}</small>
         </div>
@@ -410,7 +420,15 @@ export function AdminApp() {
                 <Field label="状态" value={product.status} onChange={(value) => updateProduct(index, "status", value)} />
                 <Field label="名称" value={product.title} onChange={(value) => updateProduct(index, "title", value)} />
                 <Field label="说明" value={product.copy} multiline onChange={(value) => updateProduct(index, "copy", value)} />
-                {index === 0 ? <ImageField label="产品图片" value={product.image} onChange={(value) => updateProduct(index, "image", value)} onUpload={upload} uploading={uploading} /> : null}
+                {(product.features || ["", "", ""]).map((feature, featureIndex) => (
+                  <Field
+                    label={`卖点 ${featureIndex + 1}`}
+                    value={feature}
+                    key={featureIndex}
+                    onChange={(value) => updateProductFeature(index, featureIndex, value)}
+                  />
+                ))}
+                <ImageField label="产品图片" value={product.image} onChange={(value) => updateProduct(index, "image", value)} onUpload={upload} uploading={uploading} />
               </article>
             ))}
           </div>
