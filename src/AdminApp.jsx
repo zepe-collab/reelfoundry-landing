@@ -215,6 +215,44 @@ export function AdminApp() {
       return draft;
     });
 
+  const ensureProductStory = (draft, productIndex) => {
+    draft.products.items[productIndex].story ??= structuredClone(
+      defaultSiteContent.products.items[productIndex].story,
+    );
+    return draft.products.items[productIndex].story;
+  };
+
+  const updateProductStory = (productIndex, key, value) =>
+    change((draft) => {
+      ensureProductStory(draft, productIndex)[key] = value;
+      return draft;
+    });
+
+  const updateProductStoryPrompt = (productIndex, promptIndex, value) =>
+    change((draft) => {
+      const story = ensureProductStory(draft, productIndex);
+      story.prompts = [...story.prompts];
+      story.prompts[promptIndex] = value;
+      return draft;
+    });
+
+  const updateProductStoryStep = (productIndex, stepIndex, key, value) =>
+    change((draft) => {
+      const story = ensureProductStory(draft, productIndex);
+      story.steps = story.steps.map((step, index) =>
+        index === stepIndex ? { ...step, [key]: value } : step,
+      );
+      return draft;
+    });
+
+  const updateProductStoryBullet = (productIndex, bulletIndex, value) =>
+    change((draft) => {
+      const story = ensureProductStory(draft, productIndex);
+      story.bullets = [...story.bullets];
+      story.bullets[bulletIndex] = value;
+      return draft;
+    });
+
   const save = async () => {
     setSaving(true);
     setMessage("");
@@ -414,23 +452,118 @@ export function AdminApp() {
             <Field label="区域介绍" value={content.products.intro} multiline onChange={(value) => updateSection("products", "intro", value)} />
           </div>
           <div className="admin-card-list">
-            {content.products.items.map((product, index) => (
-              <article className="admin-subcard" key={index}>
-                <h3>{index === 0 ? "当前产品" : `产品位 ${index + 1}`}</h3>
-                <Field label="状态" value={product.status} onChange={(value) => updateProduct(index, "status", value)} />
-                <Field label="名称" value={product.title} onChange={(value) => updateProduct(index, "title", value)} />
-                <Field label="说明" value={product.copy} multiline onChange={(value) => updateProduct(index, "copy", value)} />
-                {(product.features || ["", "", ""]).map((feature, featureIndex) => (
-                  <Field
-                    label={`卖点 ${featureIndex + 1}`}
-                    value={feature}
-                    key={featureIndex}
-                    onChange={(value) => updateProductFeature(index, featureIndex, value)}
-                  />
-                ))}
-                <ImageField label="产品图片" value={product.image} onChange={(value) => updateProduct(index, "image", value)} onUpload={upload} uploading={uploading} />
-              </article>
-            ))}
+            {content.products.items.map((product, index) => {
+              const story = product.story || defaultSiteContent.products.items[index].story;
+              return (
+                <article className="admin-subcard" key={index}>
+                  <h3>{index === 0 ? "当前产品" : `产品位 ${index + 1}`}</h3>
+                  <Field label="状态" value={product.status} onChange={(value) => updateProduct(index, "status", value)} />
+                  <Field label="名称" value={product.title} onChange={(value) => updateProduct(index, "title", value)} />
+                  <Field label="说明" value={product.copy} multiline onChange={(value) => updateProduct(index, "copy", value)} />
+                  {(product.features || ["", "", ""]).map((feature, featureIndex) => (
+                    <Field
+                      label={`卖点 ${featureIndex + 1}`}
+                      value={feature}
+                      key={featureIndex}
+                      onChange={(value) => updateProductFeature(index, featureIndex, value)}
+                    />
+                  ))}
+                  <ImageField label="产品图片" value={product.image} onChange={(value) => updateProduct(index, "image", value)} onUpload={upload} uploading={uploading} />
+
+                  {product.type === "live" ? (
+                    <div className="admin-story-note">
+                      <strong>ReelFoundry 完整页面</strong>
+                      <p>请在上方的创意方向、成片展示、本地工作台、费用与问答，以及下方下载区域中修改。</p>
+                    </div>
+                  ) : (
+                    <details className="admin-story-editor">
+                      <summary>
+                        <span>编辑完整产品故事</span>
+                        <small>对话、流程、视觉、本地工作台与行动区</small>
+                      </summary>
+
+                      <div className="admin-story-groups">
+                        <section className="admin-story-group">
+                          <h4>故事开场</h4>
+                          <div className="admin-grid admin-grid-two">
+                            <Field label="眉标题" value={story.eyebrow} onChange={(value) => updateProductStory(index, "eyebrow", value)} />
+                            <Field label="主标题" value={story.title} multiline onChange={(value) => updateProductStory(index, "title", value)} />
+                          </div>
+                          <Field label="介绍文字" value={story.description} multiline onChange={(value) => updateProductStory(index, "description", value)} />
+                        </section>
+
+                        <section className="admin-story-group">
+                          <h4>对话示例</h4>
+                          <div className="admin-grid admin-grid-two">
+                            {story.prompts.map((prompt, promptIndex) => (
+                              <Field
+                                label={promptIndex === 0 ? "用户说" : "AI / 用户补充"}
+                                value={prompt}
+                                multiline
+                                key={promptIndex}
+                                onChange={(value) => updateProductStoryPrompt(index, promptIndex, value)}
+                              />
+                            ))}
+                          </div>
+                        </section>
+
+                        <section className="admin-story-group">
+                          <h4>三步流程</h4>
+                          <div className="admin-story-step-grid">
+                            {story.steps.map((step, stepIndex) => (
+                              <div key={stepIndex}>
+                                <Field label={`步骤 ${stepIndex + 1} 标题`} value={step.title} onChange={(value) => updateProductStoryStep(index, stepIndex, "title", value)} />
+                                <Field label="步骤说明" value={step.text} multiline onChange={(value) => updateProductStoryStep(index, stepIndex, "text", value)} />
+                              </div>
+                            ))}
+                          </div>
+                        </section>
+
+                        <section className="admin-story-group">
+                          <h4>视觉展示</h4>
+                          <div className="admin-grid admin-grid-two">
+                            <Field label="眉标题" value={story.visualEyebrow} onChange={(value) => updateProductStory(index, "visualEyebrow", value)} />
+                            <Field label="主标题" value={story.visualTitle} multiline onChange={(value) => updateProductStory(index, "visualTitle", value)} />
+                          </div>
+                          <Field label="说明文字" value={story.visualText} multiline onChange={(value) => updateProductStory(index, "visualText", value)} />
+                          <ImageField label="视觉展示图片" value={story.visualImage} onChange={(value) => updateProductStory(index, "visualImage", value)} onUpload={upload} uploading={uploading} />
+                        </section>
+
+                        <section className="admin-story-group">
+                          <h4>本地工作台</h4>
+                          <div className="admin-grid admin-grid-two">
+                            <Field label="眉标题" value={story.workspaceEyebrow} onChange={(value) => updateProductStory(index, "workspaceEyebrow", value)} />
+                            <Field label="主标题" value={story.workspaceTitle} multiline onChange={(value) => updateProductStory(index, "workspaceTitle", value)} />
+                          </div>
+                          <Field label="说明文字" value={story.workspaceText} multiline onChange={(value) => updateProductStory(index, "workspaceText", value)} />
+                          <div className="admin-grid admin-grid-two">
+                            {story.bullets.map((bullet, bulletIndex) => (
+                              <Field
+                                label={`要点 ${bulletIndex + 1}`}
+                                value={bullet}
+                                key={bulletIndex}
+                                onChange={(value) => updateProductStoryBullet(index, bulletIndex, value)}
+                              />
+                            ))}
+                          </div>
+                          <ImageField label="工作台图片" value={story.workspaceImage} onChange={(value) => updateProductStory(index, "workspaceImage", value)} onUpload={upload} uploading={uploading} />
+                        </section>
+
+                        <section className="admin-story-group">
+                          <h4>行动区域</h4>
+                          <div className="admin-grid admin-grid-two">
+                            <Field label="眉标题" value={story.ctaEyebrow} onChange={(value) => updateProductStory(index, "ctaEyebrow", value)} />
+                            <Field label="按钮文字" value={story.ctaLabel} onChange={(value) => updateProductStory(index, "ctaLabel", value)} />
+                            <Field label="主标题" value={story.ctaTitle} multiline onChange={(value) => updateProductStory(index, "ctaTitle", value)} />
+                            <Field label="说明文字" value={story.ctaText} multiline onChange={(value) => updateProductStory(index, "ctaText", value)} />
+                          </div>
+                        </section>
+                      </div>
+                    </details>
+                  )}
+                </article>
+              );
+            })}
           </div>
         </section>
 

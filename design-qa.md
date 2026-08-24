@@ -12,6 +12,12 @@ This section supersedes the earlier white-carousel comparison notes below. The p
 - `npm run test:sites`: 13 passed, 0 failed on 2026-08-24.
 - Local preview: `http://127.0.0.1:4174/` returned HTTP 200. Final production publication must target the existing `reelfoundry.roypt111.chatgpt.site` Site rather than creating a second Site.
 
+### Admin story editor extension
+
+- Reserved products now expose complete story editors under `产品展示`: opening copy, two conversation prompts, three workflow steps, the visual panel, the workspace panel, three bullets, CTA copy, and two uploaded images.
+- ReelFoundry keeps one source of truth through the existing dedicated sections instead of exposing a duplicate nested story form.
+- Story merge coverage was added to the Sites worker test file. `npm run build` passed and `npm run test:sites` completed with 14 passed, 0 failed on 2026-08-24.
+
 ## Comparison target
 
 - Source visual truth: `F:\projects\产品前端网页\reelfoundry-landing\reference-option-1.png` for the established bright-white Pixel Core/ReelFoundry design language, plus the user's circular-carousel interaction specification and the structural reference at `C:\Users\hp\AppData\Local\Temp\codex-clipboard-653af1ca-feb1-4028-b9a6-b497a41de147.png`.

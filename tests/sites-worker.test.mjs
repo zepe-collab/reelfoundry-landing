@@ -3,6 +3,7 @@ import { pbkdf2Sync } from "node:crypto";
 import { access } from "node:fs/promises";
 import test from "node:test";
 import worker from "../worker/index.js";
+import { defaultSiteContent, mergeSiteContent } from "../src/siteContent.js";
 
 const ORIGIN = "https://example.test";
 const TEST_USERNAME = "reelfoundry-admin";
@@ -237,4 +238,30 @@ test("emits the files required by Sites packaging", async () => {
   await access(new URL("../dist/client/index.html", import.meta.url));
   await access(new URL("../dist/server/index.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
+});
+
+test("fills complete product stories while preserving saved admin edits", () => {
+  const merged = mergeSiteContent({
+    products: {
+      items: [
+        {},
+        {
+          story: {
+            title: "后台修改后的故事标题",
+            prompts: ["新的第一句", "新的第二句"],
+            steps: [{ title: "新步骤一" }],
+            bullets: ["新要点一", "新要点二", "新要点三"],
+          },
+        },
+      ],
+    },
+  });
+
+  const story = merged.products.items[1].story;
+  assert.equal(story.title, "后台修改后的故事标题");
+  assert.deepEqual(story.prompts, ["新的第一句", "新的第二句"]);
+  assert.equal(story.steps[0].title, "新步骤一");
+  assert.equal(story.steps[0].text, defaultSiteContent.products.items[1].story.steps[0].text);
+  assert.equal(story.steps.length, 3);
+  assert.deepEqual(story.bullets, ["新要点一", "新要点二", "新要点三"]);
 });
