@@ -8,10 +8,8 @@ import {
   CaretRight,
   ChatCircleDots,
   CheckCircle,
-  Circle,
   DownloadSimple,
   FilmSlate,
-  ImageSquare,
   List,
   Monitor,
   Pause,
@@ -466,22 +464,58 @@ export function App() {
           </div>
 
           <div className="conversation-flow">
-            <div className="message message-user" data-reveal>
-              <span>我想把这次旅行做成一段温暖的短片。</span>
-              <div className="avatar avatar-user" aria-hidden="true">
-                <User size={20} weight="fill" />
-              </div>
-            </div>
+            <p className="flow-note" data-reveal>以下画面均来自 ReelFoundry 的真实产品界面。</p>
 
-            <div className="message message-ai" data-reveal>
-              <div className="avatar avatar-ai" aria-hidden="true">
-                <Sparkle size={22} weight="fill" />
-              </div>
-              <div>
-                <strong>太好了，我们先一起找到方向。</strong>
-                <p>你希望视频更像治愈日记、公路电影，还是城市漫游？</p>
-              </div>
-            </div>
+            <figure className="flow-part" data-reveal>
+              <figcaption><b>01</b>把你的想法说给创作顾问</figcaption>
+              <img
+                src="/assets/reelfoundry/app-part-composer.png"
+                alt="ReelFoundry 对话输入框：说说你的想法，我会帮你整理成提示词"
+              />
+            </figure>
+            <figure className="flow-part" data-reveal>
+              <figcaption><b>02</b>创作顾问先说明工作方式</figcaption>
+              <img
+                src="/assets/reelfoundry/app-part-intro.png"
+                alt="创作顾问自我介绍：把想做的图或视频说给我，我会整理成可采纳的提示词卡"
+              />
+            </figure>
+            <figure className="flow-part is-user" data-reveal>
+              <figcaption><b>03</b>上传产品图，一句话说出需求</figcaption>
+              <img
+                src="/assets/reelfoundry/app-part-user.png"
+                alt="用户上传笔记本产品图并要求：为这个产品设计一个展示页详情页"
+              />
+            </figure>
+            <figure className="flow-part is-tall" data-reveal>
+              <figcaption><b>04</b>顾问整理出逐屏创作方案</figcaption>
+              <img
+                src="/assets/reelfoundry/app-part-reply.png"
+                alt="创作顾问输出的五屏方案：首屏、核心卖点、场景体验、规格与收束"
+              />
+            </figure>
+            <figure className="flow-part is-user" data-reveal>
+              <figcaption><b>05</b>你确认方向</figcaption>
+              <img
+                src="/assets/reelfoundry/app-part-agree.png"
+                alt="用户回复：同意"
+              />
+            </figure>
+            <figure className="flow-part" data-reveal>
+              <figcaption><b>06</b>交付可直接采用的提示词卡</figcaption>
+              <img
+                src="/assets/reelfoundry/app-part-card.png"
+                alt="创作顾问交付的第 1 屏图像提示词卡，可点击采用"
+              />
+            </figure>
+            <figure className="flow-part" data-reveal>
+              <figcaption><b>07</b>采用提示词，生成图片或视频</figcaption>
+              <img
+                className="flow-generate"
+                src="/assets/reelfoundry/app-part-generate.png"
+                alt="ReelFoundry 生成面板：输入提示词，选择图或视频、模型、比例与清晰度后点击生成"
+              />
+            </figure>
 
             <div className="direction-block" data-reveal>
               <p className="step-label">AI 提出 3 个创作方向</p>
@@ -498,22 +532,6 @@ export function App() {
                     <p>{direction.copy}</p>
                   </article>
                 ))}
-              </div>
-            </div>
-
-            <div className="message message-user message-user-short" data-reveal>
-              <span>我更喜欢治愈日常，节奏慢一点，温暖一些。</span>
-              <div className="avatar avatar-user" aria-hidden="true">
-                <User size={20} weight="fill" />
-              </div>
-            </div>
-
-            <div className="message message-ai message-ai-small" data-reveal>
-              <div className="avatar avatar-ai" aria-hidden="true">
-                <Sparkle size={22} weight="fill" />
-              </div>
-              <div>
-                <strong>明白了。我为你整理成一个分镜故事。</strong>
               </div>
             </div>
 
@@ -548,15 +566,6 @@ export function App() {
                   <span>故事停在最好的瞬间</span>
                 </li>
               </ol>
-            </div>
-
-            <div className="message message-ai message-ai-small" data-reveal>
-              <div className="avatar avatar-ai" aria-hidden="true">
-                <Sparkle size={22} weight="fill" />
-              </div>
-              <div>
-                <strong>分镜已经准备好，现在生成一段预览片吧。</strong>
-              </div>
             </div>
           </div>
             </section>
@@ -601,59 +610,12 @@ export function App() {
             </a>
           </div>
 
-          <div className="launcher" data-reveal aria-label="ReelFoundry 启动器界面预览">
-            <div className="launcher-topbar">
-              <div className="window-dots" aria-hidden="true">
-                <Circle size={9} weight="fill" />
-                <Circle size={9} weight="fill" />
-                <Circle size={9} weight="fill" />
-              </div>
-              <span>ReelFoundry</span>
-              <span className="launcher-more">•••</span>
-            </div>
-            <div className="launcher-body">
-              <aside className="launcher-sidebar">
-                <strong>ReelFoundry</strong>
-                <button className="launcher-nav active" type="button">
-                  <Sparkle size={16} weight="fill" /> 新建项目
-                </button>
-                <button className="launcher-nav" type="button">
-                  <SquaresFour size={16} /> 项目
-                </button>
-                <button className="launcher-nav" type="button">
-                  <ImageSquare size={16} /> 素材库
-                </button>
-                <button className="launcher-nav" type="button">
-                  <ChatCircleDots size={16} /> 对话
-                </button>
-              </aside>
-
-              <div className="launcher-main">
-                <p className="launcher-greeting">下午好，准备好继续创作了吗？</p>
-                <div className="launcher-prompt">告诉我你的想法…</div>
-                <div className="launcher-chips">
-                  <span>旅行照片</span>
-                  <span>家庭时光</span>
-                  <span>产品故事</span>
-                  <span>节日回忆</span>
-                </div>
-                <p className="recent-label">最近项目</p>
-                <div className="recent-grid">
-                  <div>
-                    <img src="/assets/reelfoundry/final-video.png" alt="海边旅行项目" />
-                    <strong>温柔海岸</strong>
-                  </div>
-                  <div>
-                    <img src="/assets/reelfoundry/hero-travel.png" alt="山间旅行项目" />
-                    <strong>山间日记</strong>
-                  </div>
-                  <div>
-                    <img src="/assets/reelfoundry/final-video.png" alt="城市故事项目" />
-                    <strong>城市漫游</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="launcher" data-reveal aria-label="ReelFoundry 产品界面">
+            <img
+              className="launcher-shot"
+              src="/assets/reelfoundry/app-showcase.png"
+              alt="ReelFoundry 创作界面：左侧项目列表，中间创作顾问对话，右侧生成画布与素材栏"
+            />
           </div>
             </section>
 

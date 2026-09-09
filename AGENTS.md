@@ -24,3 +24,11 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - The administrator can change that username and password inside the backend. Do not expose plaintext credentials in page source or repository files.
 - The admin login offers a default-enabled “remember this device” option backed by a 30-day opaque HttpOnly session cookie. Never persist the plaintext password in browser storage; shared devices can opt out for a browser-session-only cookie.
 - Store editable page content in D1 and uploaded images in R2. A successful save updates the public page immediately without changing its URL.
+
+## Real Product UI Decisions (2026-09-07)
+
+- 官网展示的产品界面必须是 ReelFoundry 真实产品（https://app.reelfoundry.cn/）的截图，不再使用手工搭建的假 UI 或伪造气泡。
+- `#process` 对话区按 01-07 编号展示真实界面部件，图片位于 `public/assets/reelfoundry/app-part-*.png`：composer（输入框）、intro（顾问自介）、user（产品图+红色需求气泡）、reply（逐屏方案长回复）、agree（同意）、card（提示词采用卡）、generate（图/视频+模型/比例/清晰度+生成按钮控件块）。
+- 长页启动器区块使用整页真实截图 `app-showcase.png`（1440×900）。
+- 旅行故事的方向卡、分镜、成片图沿用原营销视觉；如需替换为真实输出，需用户在产品里先生成好对应素材再截图。
+- 后台 D1 已保存内容优先于代码内默认值：发布后页面若仍显示旧文案，需在 `/#/admin` 保存覆盖。
